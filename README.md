@@ -1,49 +1,66 @@
-# Painel Financeiro da Elvira — primeira versão de testes
+# Painel Financeiro da Elvira — RR Resistências Industriais
 
-Aplicação independente em português para RR Resistências Industriais. Não conecta nem modifica a calculadora técnica. Base inicial vazia; o único exemplo disponível exige ação explícita e recebe prefixo DEMONSTRAÇÃO.
+Aplicação independente para custos, compras, formação de preços e contas a pagar. A calculadora técnica existente não é acessada ou modificada. Dados persistem no navegador; exporte backups regularmente.
 
 ## Instalação e execução
 
-Requer Node.js 20 ou superior e navegador moderno. Não há dependências de execução nem etapa de compilação.
+Requer Node.js 20+ e navegador moderno.
 
-1. Abra um terminal nesta pasta.
-2. Execute `node server.mjs` (ou `npm start`).
+1. Execute `npm install` para instalar a dependência usada nos testes XML.
+2. Execute `npm start` ou `node server.mjs`.
 3. Acesse http://127.0.0.1:4173 . Não abra index.html diretamente.
-4. Execute `node --test tests/domain.test.mjs` (ou `npm test`).
-5. Testes de XML com DOMParser nativo: abra http://127.0.0.1:4173/xml-tests.html . Esses quatro testes foram implementados; não foram executados nesta entrega devido à indisponibilidade da automação do navegador.
+4. Execute `npm test` para os testes de domínio, importação e telas com DOM simulado.
+5. Para os testes do parser nativo do navegador, abra /xml-tests.html. A nota em /nfe-demonstracao.xml é fictícia, identificada como DEMONSTRAÇÃO.
 
-Mantenha o mesmo endereço e navegador para acessar a mesma base. Os dados ficam no localStorage, não na pasta do servidor. Alterar porta, host ou perfil cria outra base. Limpar o navegador remove os dados. Exporte backups JSON com frequência.
+A aplicação não requer dependências no navegador nem compilação. O pacote @xmldom/xmldom é somente de desenvolvimento. O acesso ao mesmo site em outro navegador/máquina começa com outra base. Para transportar dados: Exportar backup → Configurações → Restaurar backup. Limpar os dados do navegador remove a base local.
 
-## Como usar cada módulo
+## Importação fiel da NF-e
 
-1. **Materiais e fornecedores:** cadastre o fornecedor antes do material. Informe unidade de compra e consumo. O custo inicial é uma proposta, ainda indisponível para orçamento. Cabeçotes e flanges são acessórios pelo conjunto completo, já com solda incluída.
-2. **Entradas e compras:** registre recebimentos manuais com situação documental, emissão e recebimento separados. Na importação XML, selecione os itens, vincule aos materiais existentes e revise a conversão. Exemplo: barra de 6 metros, consumo em metros, fator 6. Custos efetivos = (produtos − descontos + frete + outras despesas atribuídas) / quantidade de consumo. Tributos destacados não são adicionados automaticamente. Revise tributos recuperáveis e custos adicionais com a contabilidade; eventuais valores atribuídos entram em outras despesas.
-3. **Aprovação de custos:** selecione propostas, informe o responsável e confirme aprovação ou rejeição. A aprovação atualiza o custo usado em novos orçamentos. A rejeição preserva o custo. O lote permite uma proposta por material para evitar resultado dependente de ordem. Auditoria registra custo vigente, custo proposto, responsável e data. Nome informado não equivale a autenticação.
-4. **Equipe e produção:** informe salário, provisão de 13º, provisão de férias e adicional, encargos agregados incluindo FGTS, horas efetivamente produtivas. Custo/hora = salário × (1 + provisões) × (1 + encargos) / horas. A base dos encargos é salário mais provisões nesta versão. Cadastre etapas e minutos por bloco iniciado de 100 mm por elemento. Essa interpretação usa arredondamento para cima e deve ser validada pela RR. A referência não varia pelo diâmetro.
-5. **Custos e preços:** informe dimensões finais, elementos e consumos técnicos. A base por metro multiplica comprimento/1000 e elementos; por elemento multiplica elementos; conjunto mantém quantidade fixa. Nipples sugerem duas unidades por elemento; terminais requerem quantidade informada. Cabeçotes e flanges usam conjunto completo. Não crie outra linha de solda quando já incluída. Cadastre etapas produtivas antes de calcular.
-6. **Rateios e preço:** os valores atribuídos de despesas de fabricação e administrativas são informados em reais por orçamento; não há rateio automático. Inclua apenas despesas fora de materiais, acessórios e mão de obra. Tributos de venda e margem são parâmetros obrigatórios, sem alíquota presumida do Simples. Método margem: preço = custo total / (1 − tributos − margem desejada). Método markup: preço = custo × multiplicador. Desconto incide sobre o preço. Margem bruta = (venda − materiais − acessórios − mão de obra − fabricação) / venda. Margem líquida estimada deduz também administrativo e tributos. Salvar orçamento preserva uma cópia dos custos da ocasião.
-7. **Contas a pagar:** parcelas mensais preservam centavos e ajustam vencimentos ao último dia disponível do mês. Registre pagamentos parciais ou totais com data e valor. O saldo determina a situação; uma parcela parcialmente paga pode continuar em atraso, destacado pelo saldo vencido no painel. Pagamentos não alteram o custo dos materiais.
-8. **Relatórios:** padrão dos três últimos meses completos; início inclusivo e fim exclusivo. Entradas usam recebimento; compromissos usam vencimento; quitações usam data do pagamento. Compare com período imediatamente anterior de igual duração em dias. Exportação Excel é HTML tabular com extensão .xls, podendo exibir aviso de formato no Excel; não é arquivo .xlsx. PDF usa impressão do navegador: escolha Salvar como PDF.
-9. **Configurações:** exporte e restaure backups JSON. A restauração substitui toda a base após confirmação. Carregue demonstração somente em base vazia.
+Em **Entradas e compras**, selecione o XML autorizado da NF-e. O painel lê fornecedor, CNPJ/CPF, código com zeros à esquerda, descrição, unidade, quantidade, preço unitário original, descontos, frete, seguro, outras despesas e impostos. Os dados originais e o XML integral são preservados no registro local e no backup.
 
-## Organização e integração
+O fornecedor é identificado por CNPJ/CPF; novos materiais são identificados pelo par fornecedor + código do produto. O código do fornecedor é mantido, inclusive quando dois fornecedores usam o mesmo código. Para material já existente de outro fornecedor, o vínculo pode ser escolhido explicitamente. A descrição original da nota permanece preservada mesmo quando o cadastro interno tem outra descrição.
 
-- dist/domain.mjs: cálculos, aprovações, parcelas, registro de compras e extração NF-e.
-- dist/store.mjs: repositório local; substituir por uma implementação com API/banco em etapa futura.
-- dist/app.mjs: interface e coordenação de operações.
-- dist/style.css: apresentação responsiva e impressão.
-- technical-input.schema.json: contrato de dimensões/elementos para futura integração; nenhum acesso GitHub ou integração é executado.
-- tests/domain.test.mjs: dez testes automatizados de regras de negócio.
-- dist/xml-tests.html: quatro testes XML para navegador.
+Antes de confirmar, escolha **Matéria-prima**, **Acessório** ou **Componente** para cada item cadastrado. Revise unidade de consumo e fator de conversão: barra de 6 metros para consumo em metros = fator 6. Uma unidade de compra alterada requer confirmação explícita da conversão. O último fator informado é reapresentado nas importações seguintes do material.
 
-## Limites e próxima etapa
+Quando frete, seguro, outras despesas ou descontos já estiverem distribuídos nos itens e sua soma conferir com os totais, a distribuição original é respeitada. Se não houver distribuição nos itens, o total destacado é rateado proporcionalmente ao valor líquido dos produtos, com distribuição dos centavos restantes por maiores frações. Distribuições parciais ou divergentes nos itens bloqueiam o registro para conferência. Valores originais por item continuam disponíveis para conferência.
 
-Esta é uma versão inicial local para validação, não um sistema contábil ou multiusuário. Não há autenticação, conciliação bancária ou validação fiscal da NF-e. A auditoria local pode ser alterada com acesso ao navegador. Backup tem validação estrutural básica; importe somente arquivos confiáveis produzidos por esta aplicação.
+O preço unitário original do XML é exibido separadamente do custo unitário com despesas. ICMS, PIS, COFINS e tributos aproximados são exibidos, sem nova soma ao preço. IPI, II, ICMS-ST, FCP-ST e IPI devolvido destacados como adicionais são incorporados à composição, conforme os totais da própria nota; desoneração dedutível é tratada separadamente. O total calculado precisa fechar em centavos com vNF e o total dos produtos também precisa conferir. Diferenças bloqueiam o registro para conferência; nenhum ajuste arbitrário é criado para forçar o fechamento. Esta conferência não substitui a validação fiscal ou a revisão contábil de créditos tributários.
 
-A importação lê frete/desconto/despesas por item; não reconcilia diferenças entre totais globais da nota e seus itens. Notas com totais sem distribuição nos itens precisam de lançamento manual com atribuição revisada. O valor financeiro importado corresponde somente aos itens selecionados, não à nota inteira. Parcelamento é mensal e a interface ainda não permite editar cada vencimento individualmente. Alterações cadastrais e correções de lançamentos exigem próxima etapa; preserve backups antes dos testes. Não há controle automático de dupla contagem: a separação dos grupos torna a revisão explícita.
+Todas as duplicatas são lidas de cobr/dup com o valor e vencimento originais. A soma deve coincidir com o total da nota. XML sem duplicatas exige informar um vencimento confirmado; a data atual não é presumida. Condições de pagamento atípicas, como adiantamentos fora das duplicatas ou duplicatas que não somam vNF, exigem conferência antes do cadastro. As informações de pag/detPag são preservadas; não geram uma quitação bancária automática.
 
-O painel resume próximos compromissos, mas a ordenação de datas e o indicador de evolução ainda devem ser refinados; evolução detalhada está na tabela do relatório. A comparação anterior usa igual duração em dias, não três meses de calendário anteriores. Ainda faltam: exportação nativa XLSX/PDF, conciliação de XML por totais, edição de parcelas e cadastros, rateios mensais, testes visuais e validação operacional pela RR.
+Ao confirmar a importação, fornecedor, novos materiais, compra, parcelas e propostas de custo são gravados em conjunto. Falhas de conferência não deixam cadastros parciais. A chave de acesso impede duplicidade. Desmarcar um item exclui apenas o cadastro/atualização do material: o registro da nota e suas parcelas continuam pelo valor integral.
 
-## Validação realizada
+## Aprovação pelo total da nota
 
-Dez testes de domínio aprovados. Sintaxe de app.mjs conferida. Nove telas renderizadas com DOM simulado sem exceções; servidor local respondeu HTTP 200. Automação visual do navegador indisponível (timeout), portanto layout e fluxos completos ainda precisam de validação manual. Os testes de XML no navegador não foram executados.
+Em **Aprovação de custos**, selecione a nota, informe o responsável e confirme a decisão. A tela mostra o total integral e os vencimentos antes da aprovação. Aprovar ou rejeitar decide todos os custos vinculados à nota em conjunto; não é permitido aprovar apenas um item de uma nota neste fluxo.
+
+O custo dos materiais permanece pendente até a aprovação. Linhas do mesmo material na nota são agrupadas por média ponderada da quantidade de consumo. Auditoria registra decisões de custo e, separadamente, a decisão sobre o valor total da nota. O pagamento das parcelas não altera o custo aprovado. Notas antigas já importadas pela versão anterior mantêm seus registros históricos; o fluxo integral é aplicado às novas importações.
+
+## Lançamento manual
+
+O documento/referência é **opcional**. Informe fornecedor, situação documental, emissão, recebimento, material, conversão, valores, parcelamento e vencimento. Desconto, frete e outras despesas são campos separados. Valores de referência manual vazios são aceitos. Pagamentos parciais e totais ficam em **Contas a pagar**, com histórico por data de pagamento.
+
+## Demais módulos
+
+- **Materiais e fornecedores:** cadastro manual também disponível. Todo custo inicial exige aprovação. Cabeçotes e flanges são conjuntos completos com solda incluída.
+- **Equipe e produção:** cadastre salário, provisões, encargos agregados incluindo FGTS e horas produtivas. Custo/hora = salário × (1 + provisões de 13º e férias) × (1 + encargos) / horas produtivas. A base dos encargos é salário e provisões. Etapas usam minutos por bloco iniciado de 100 mm por elemento, mesma referência entre diâmetros.
+- **Custos e preços:** informe dimensões finais após compactação, elementos e consumos técnicos. Bases: conjunto, por elemento ou por metro de elemento. Nipples sugerem 2 por elemento, ajustáveis. Terminais exigem quantidade informada. Cabeçotes/flanges usam conjunto completo; evite duplicar solda já incluída.
+- **Rateios e preço:** fabricação e administrativo são valores atribuídos em reais por orçamento. Informe somente despesas fora dos materiais, acessórios e mão de obra. Tributos de venda e margem são configurados pela RR. Preço por margem = custo / (1 − tributos − margem); preço por markup = custo × multiplicador. Margem bruta deduz materiais, acessórios, mão de obra e fabricação; margem líquida estimada deduz também administrativo e tributos. Descontos mostram o efeito no resultado. Orçamentos preservam uma cópia dos custos utilizados.
+- **Contas a pagar:** registre quitações totais ou parciais sem exceder o saldo. Parcelas manuais são mensais, ajustadas ao último dia disponível e preservando centavos. Parcelas de XML seguem as datas exatas do documento.
+- **Relatórios:** três últimos meses completos por padrão, início inclusivo e fim exclusivo. Entradas usam recebimento; compromissos usam vencimento; quitações usam data do pagamento. Comparação com período anterior de mesma duração em dias. Excel usa HTML tabular em .xls e pode mostrar aviso de formato; PDF usa Salvar como PDF na impressão.
+- **Configurações:** backups JSON e exemplo demonstrativo em base vazia. Restauração substitui a base após confirmação.
+
+## Organização
+
+- dist/domain.mjs: cálculos, custos, parcelas e aprovações.
+- dist/nfe.mjs: parser NF-e, conciliação, rateio, cadastro automático e decisão integral.
+- dist/store.mjs: repositório local substituível por API/banco futuro.
+- dist/app.mjs: interface e coordenação das operações.
+- technical-input.schema.json: contrato futuro de dimensões e elementos; integração não executada.
+- tests/domain.test.mjs, tests/nfe.test.mjs, tests/ui.test.mjs: testes automatizados com fixture fictícia.
+
+## Validação e limites
+
+29 testes automatizados passaram: domínio, XML com parser real, aprovação integral, prevenção de duplicidade, fechamento de centavos, parcelas e renderização com DOM simulado. Automação visual do navegador indisponível por timeout; testes do DOMParser nativo e layout precisam de validação manual.
+
+Primeira versão de testes, sem autenticação de operadores, validação fiscal, banco compartilhado ou conciliação bancária. Auditoria local não é imutável. Backups têm validação estrutural básica: use arquivos confiáveis. Importações com novos grupos fiscais ou regras de composição não suportadas são bloqueadas quando não fecham com os totais, para evitar custo estimado incorreto. Não há integração com SEFAZ. Ainda pendentes: edição de cadastros/parcelas, rateios mensais automáticos, XLSX/PDF nativos e comparações por meses de calendário.
