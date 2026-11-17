@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Entrada técnica futura — não conectada",
+  "type": "object",
+  "required": [
+    "version",
+    "elements",
+    "lengthMm",
+    "diameterMm"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "elements": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "lengthMm": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "diameterMm": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    }
+  },
+  "additionalProperties": false
+}
