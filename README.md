@@ -2,6 +2,12 @@
 
 Aplicação independente para custos, compras, formação de preços e contas a pagar. A calculadora técnica existente não é acessada ou modificada. Dados persistem no navegador; exporte backups regularmente.
 
+## Aviso sobre a base de testes
+
+**Zerar a base remove os cadastros, compras, custos, parcelas, pagamentos, auditoria e orçamentos deste navegador. Exporte um backup antes de limpar.** A recuperação depende de restaurar esse arquivo em Configurações.
+
+Os dados financeiros ficam no localStorage e não são enviados ao GitHub. Um commit ou uma atualização do site não limpa nem sincroniza dados entre máquinas. Após uma limpeza, recarregue as demais abas abertas do painel para evitar que uma aba antiga grave novamente o estado anterior.
+
 ## Instalação e execução
 
 Requer Node.js 20+ e navegador moderno.
