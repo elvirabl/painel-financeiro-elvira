@@ -1,12 +1,12 @@
 # Painel Financeiro da Elvira — RR Resistências Industriais
 
-Aplicação independente para custos, compras, formação de preços e contas a pagar. A calculadora técnica existente não é acessada ou modificada. Dados persistem no navegador; exporte backups regularmente.
+Aplicação independente para custos, compras, formação de preços e contas a pagar. A calculadora técnica existente não é acessada ou modificada. Modo de testes temporário: os dados ficam somente na memória da página e cada abertura ou recarregamento começa com a base vazia. Exporte backup para preservar qualquer trabalho.
 
 ## Aviso sobre a base de testes
 
-**Zerar a base remove os cadastros, compras, custos, parcelas, pagamentos, auditoria e orçamentos deste navegador. Exporte um backup antes de limpar.** A recuperação depende de restaurar esse arquivo em Configurações.
+**Cada abertura, nova aba ou recarregamento inicia uma base vazia. Os dados não são persistidos.** Navegar pelos módulos da página mantém os dados durante aquele acesso. Exporte backup antes de fechar ou atualizar; a restauração recupera os dados somente para a página atual.
 
-Os dados financeiros ficam no localStorage e não são enviados ao GitHub. Um commit ou uma atualização do site não limpa nem sincroniza dados entre máquinas. Após uma limpeza, recarregue as demais abas abertas do painel para evitar que uma aba antiga grave novamente o estado anterior.
+Bases de versões anteriores no localStorage são removidas ao abrir a versão atual, conforme solicitado para os testes. Os arquivos de backup já exportados continuam disponíveis. Não há sincronização entre abas ou máquinas, e dados financeiros não são enviados ao GitHub.
 
 ## Instalação e execução
 
@@ -18,11 +18,13 @@ Requer Node.js 20+ e navegador moderno.
 4. Execute `npm test` para os testes de domínio, importação e telas com DOM simulado.
 5. Para os testes do parser nativo do navegador, abra /xml-tests.html. A nota em /nfe-demonstracao.xml é fictícia, identificada como DEMONSTRAÇÃO.
 
-A aplicação não requer dependências no navegador nem compilação. O pacote @xmldom/xmldom é somente de desenvolvimento. O acesso ao mesmo site em outro navegador/máquina começa com outra base. Para transportar dados: Exportar backup → Configurações → Restaurar backup. Limpar os dados do navegador remove a base local.
+A aplicação não requer dependências no navegador nem compilação. O pacote @xmldom/xmldom é somente de desenvolvimento. Para guardar e transportar dados: Exportar backup → Configurações → Restaurar backup.
 
 ## Importação fiel da NF-e
 
-Em **Entradas e compras**, selecione o XML autorizado da NF-e. O painel lê fornecedor, CNPJ/CPF, código com zeros à esquerda, descrição, unidade, quantidade, preço unitário original, descontos, frete, seguro, outras despesas e impostos. Os dados originais e o XML integral são preservados no registro local e no backup.
+Em **Importar XML**, selecione o XML autorizado da NF-e. O painel lê fornecedor, CNPJ/CPF, código com zeros à esquerda, descrição, unidade, quantidade, preço unitário original, descontos, frete, seguro, outras despesas e impostos. Os dados originais e o XML integral são preservados no registro local e no backup.
+
+**Importar XML**, **Lançamento manual** e **Compras registradas** são telas separadas. A importação não depende de nenhum fornecedor, material ou lançamento manual previamente cadastrado. Os formulários validam somente os seus próprios campos.
 
 O fornecedor é identificado por CNPJ/CPF; novos materiais são identificados pelo par fornecedor + código do produto. O código do fornecedor é mantido, inclusive quando dois fornecedores usam o mesmo código. Para material já existente de outro fornecedor, o vínculo pode ser escolhido explicitamente. A descrição original da nota permanece preservada mesmo quando o cadastro interno tem outra descrição.
 
@@ -44,7 +46,7 @@ O custo dos materiais permanece pendente até a aprovação. Linhas do mesmo mat
 
 ## Lançamento manual
 
-O documento/referência é **opcional**. Informe fornecedor, situação documental, emissão, recebimento, material, conversão, valores, parcelamento e vencimento. Desconto, frete e outras despesas são campos separados. Valores de referência manual vazios são aceitos. Pagamentos parciais e totais ficam em **Contas a pagar**, com histórico por data de pagamento.
+Use a tela **Lançamento manual**. O documento/referência é **opcional**. Informe fornecedor, situação documental, emissão, recebimento, material, conversão, valores, parcelamento e vencimento. Desconto, frete e outras despesas são campos separados. Valores de referência manual vazios são aceitos. Pagamentos parciais e totais ficam em **Contas a pagar**, com histórico por data de pagamento.
 
 ## Demais módulos
 
@@ -60,13 +62,13 @@ O documento/referência é **opcional**. Informe fornecedor, situação document
 
 - dist/domain.mjs: cálculos, custos, parcelas e aprovações.
 - dist/nfe.mjs: parser NF-e, conciliação, rateio, cadastro automático e decisão integral.
-- dist/store.mjs: repositório local substituível por API/banco futuro.
+- dist/store.mjs: repositório em memória por acesso, substituível por API/banco futuro.
 - dist/app.mjs: interface e coordenação das operações.
 - technical-input.schema.json: contrato futuro de dimensões e elementos; integração não executada.
-- tests/domain.test.mjs, tests/nfe.test.mjs, tests/ui.test.mjs: testes automatizados com fixture fictícia.
+- tests/domain.test.mjs, tests/nfe.test.mjs, tests/ui.test.mjs, tests/session.test.mjs: testes automatizados com fixture fictícia.
 
 ## Validação e limites
 
-29 testes automatizados passaram: domínio, XML com parser real, aprovação integral, prevenção de duplicidade, fechamento de centavos, parcelas e renderização com DOM simulado. Automação visual do navegador indisponível por timeout; testes do DOMParser nativo e layout precisam de validação manual.
+33 testes automatizados passaram: domínio, XML com parser real, aprovação integral, duplicidade, centavos, parcelas, separação dos formulários, base temporária e renderização com DOM simulado. Também foi verificada no navegador a importação completa de XML demonstrativo em base vazia, sem lançamento manual, e a limpeza após recarregamento.
 
 Primeira versão de testes, sem autenticação de operadores, validação fiscal, banco compartilhado ou conciliação bancária. Auditoria local não é imutável. Backups têm validação estrutural básica: use arquivos confiáveis. Importações com novos grupos fiscais ou regras de composição não suportadas são bloqueadas quando não fecham com os totais, para evitar custo estimado incorreto. Não há integração com SEFAZ. Ainda pendentes: edição de cadastros/parcelas, rateios mensais automáticos, XLSX/PDF nativos e comparações por meses de calendário.
