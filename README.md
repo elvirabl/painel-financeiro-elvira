@@ -1,74 +1,87 @@
 # Painel Financeiro da Elvira — RR Resistências Industriais
 
-Aplicação independente para custos, compras, formação de preços e contas a pagar. A calculadora técnica existente não é acessada ou modificada. Modo de testes temporário: os dados ficam somente na memória da página e cada abertura ou recarregamento começa com a base vazia. Exporte backup para preservar qualquer trabalho.
+Aplicação independente de custos, compras, formação de preços e contas a pagar. A calculadora técnica não é modificada ou acessada.
 
-## Aviso sobre a base de testes
+## Dados preservados e teclado
 
-**Cada abertura, nova aba ou recarregamento inicia uma base vazia. Os dados não são persistidos.** Navegar pelos módulos da página mantém os dados durante aquele acesso. Exporte backup antes de fechar ou atualizar; a restauração recupera os dados somente para a página atual.
+A limpeza automática foi desativada. Cadastros, notas e orçamentos salvos ficam no localStorage deste navegador e permanecem após recarregar. Primeiro acesso sem base salva começa vazio. Não há compartilhamento automático entre navegadores ou máquinas. Exporte backups regularmente; dados já perdidos na versão temporária só podem ser recuperados por um backup existente.
 
-Bases de versões anteriores no localStorage são removidas ao abrir a versão atual, conforme solicitado para os testes. Os arquivos de backup já exportados continuam disponíveis. Não há sincronização entre abas ou máquinas, e dados financeiros não são enviados ao GitHub.
+**Enter avança para o próximo campo do mesmo formulário e não envia o formulário.** Depois do último campo, retorna ao primeiro. Use os botões para salvar ou confirmar. Texto multilinha mantém Enter como quebra de linha. Campos ainda não salvos são preservados durante a navegação pelos módulos da página; um recarregamento descarta esses rascunhos.
+
+O menu lateral tem rolagem independente para alcançar todos os módulos em telas menores.
 
 ## Instalação e execução
 
 Requer Node.js 20+ e navegador moderno.
 
-1. Execute `npm install` para instalar a dependência usada nos testes XML.
+1. Execute `npm install` para a dependência de testes XML.
 2. Execute `npm start` ou `node server.mjs`.
-3. Acesse http://127.0.0.1:4173 . Não abra index.html diretamente.
-4. Execute `npm test` para os testes de domínio, importação e telas com DOM simulado.
-5. Para os testes do parser nativo do navegador, abra /xml-tests.html. A nota em /nfe-demonstracao.xml é fictícia, identificada como DEMONSTRAÇÃO.
+3. Abra http://127.0.0.1:4173 .
+4. Execute `npm test`.
+5. /xml-tests.html contém testes adicionais do DOMParser nativo. /nfe-demonstracao.xml é uma nota fictícia.
 
-A aplicação não requer dependências no navegador nem compilação. O pacote @xmldom/xmldom é somente de desenvolvimento. Para guardar e transportar dados: Exportar backup → Configurações → Restaurar backup.
+A aplicação não precisa de bibliotecas no navegador nem compilação. @xmldom/xmldom é somente de desenvolvimento.
 
-## Importação fiel da NF-e
+## Editar produtos, materiais e fornecedores
 
-Em **Importar XML**, selecione o XML autorizado da NF-e. O painel lê fornecedor, CNPJ/CPF, código com zeros à esquerda, descrição, unidade, quantidade, preço unitário original, descontos, frete, seguro, outras despesas e impostos. Os dados originais e o XML integral são preservados no registro local e no backup.
+Em **Materiais e fornecedores**, clique em **Editar material**. Código, descrição, categoria, fornecedor, unidade de compra, unidade de consumo, conversão e novo custo proposto podem ser alterados. Informe o responsável e clique em **Salvar material**. O ID interno é preservado para manter os vínculos. Código é único por fornecedor.
 
-**Importar XML**, **Lançamento manual** e **Compras registradas** são telas separadas. A importação não depende de nenhum fornecedor, material ou lançamento manual previamente cadastrado. Os formulários validam somente os seus próprios campos.
+O novo custo gera uma proposta: ele não substitui o custo aprovado até a decisão em **Aprovação de custos**. Trocar a unidade de consumo exige informar um custo na unidade nova e decidir primeiro qualquer proposta pendente; o material fica sem custo utilizável até a nova aprovação. Isso evita aplicar um preço por metro como se fosse por centímetro.
 
-O fornecedor é identificado por CNPJ/CPF; novos materiais são identificados pelo par fornecedor + código do produto. O código do fornecedor é mantido, inclusive quando dois fornecedores usam o mesmo código. Para material já existente de outro fornecedor, o vínculo pode ser escolhido explicitamente. A descrição original da nota permanece preservada mesmo quando o cadastro interno tem outra descrição.
+**Editar fornecedor** permite corrigir nome e documento sem perder o vínculo dos materiais. O histórico das notas mantém o fornecedor original do documento. As edições registram responsável e valores anteriores na auditoria local.
 
-Antes de confirmar, escolha **Matéria-prima**, **Acessório** ou **Componente** para cada item cadastrado. Revise unidade de consumo e fator de conversão: barra de 6 metros para consumo em metros = fator 6. Uma unidade de compra alterada requer confirmação explícita da conversão. O último fator informado é reapresentado nas importações seguintes do material.
+Em **Custos e preços**, **Editar produto / criar revisão** reapresenta as dimensões, elementos, consumos, acessórios, rateios, tributos e margem de um orçamento salvo. Calcular salva outra versão usando os custos aprovados atuais; a versão anterior permanece preservada.
 
-Quando frete, seguro, outras despesas ou descontos já estiverem distribuídos nos itens e sua soma conferir com os totais, a distribuição original é respeitada. Se não houver distribuição nos itens, o total destacado é rateado proporcionalmente ao valor líquido dos produtos, com distribuição dos centavos restantes por maiores frações. Distribuições parciais ou divergentes nos itens bloqueiam o registro para conferência. Valores originais por item continuam disponíveis para conferência.
+## Importação XML independente
 
-O preço unitário original do XML é exibido separadamente do custo unitário com despesas. ICMS, PIS, COFINS e tributos aproximados são exibidos, sem nova soma ao preço. IPI, II, ICMS-ST, FCP-ST e IPI devolvido destacados como adicionais são incorporados à composição, conforme os totais da própria nota; desoneração dedutível é tratada separadamente. O total calculado precisa fechar em centavos com vNF e o total dos produtos também precisa conferir. Diferenças bloqueiam o registro para conferência; nenhum ajuste arbitrário é criado para forçar o fechamento. Esta conferência não substitui a validação fiscal ou a revisão contábil de créditos tributários.
+**Importar XML**, **Lançamento manual** e **Compras registradas** têm telas e formulários separados. XML não depende de cadastro nem lançamento manual prévio.
 
-Todas as duplicatas são lidas de cobr/dup com o valor e vencimento originais. A soma deve coincidir com o total da nota. XML sem duplicatas exige informar um vencimento confirmado; a data atual não é presumida. Condições de pagamento atípicas, como adiantamentos fora das duplicatas ou duplicatas que não somam vNF, exigem conferência antes do cadastro. As informações de pag/detPag são preservadas; não geram uma quitação bancária automática.
+O painel lê nome e CNPJ/CPF do fornecedor; código do produto com zeros; descrição; unidade; quantidade; preço unitário; frete; seguro; descontos; demais despesas e impostos. Fornecedores são identificados pelo documento; materiais são vinculados por fornecedor + código, com opção de vínculo manual. Escolha Matéria-prima, Acessório ou Componente e confira o fator de conversão, por exemplo barra de 6 metros para consumo em metros = 6. A importação cria os cadastros automaticamente ao confirmar.
 
-Ao confirmar a importação, fornecedor, novos materiais, compra, parcelas e propostas de custo são gravados em conjunto. Falhas de conferência não deixam cadastros parciais. A chave de acesso impede duplicidade. Desmarcar um item exclui apenas o cadastro/atualização do material: o registro da nota e suas parcelas continuam pelo valor integral.
+## Editar itens de notas
 
-## Aprovação pelo total da nota
+Antes de importar, abra **Editar campos dos produtos desta nota**. Código, descrição, unidade de compra, quantidade, preço unitário, total do item, desconto, frete, seguro, outras despesas e valores dos impostos são editáveis. Clique em **Salvar campos e conferir totais** e depois importe.
 
-Em **Aprovação de custos**, selecione a nota, informe o responsável e confirme a decisão. A tela mostra o total integral e os vencimentos antes da aprovação. Aprovar ou rejeitar decide todos os custos vinculados à nota em conjunto; não é permitido aprovar apenas um item de uma nota neste fluxo.
+Para nota já registrada, em **Compras registradas** clique em **Editar itens da nota**. Edite os campos, confira as categorias e conversões, informe o responsável e salve a edição. A nota mantém sua chave, valor total e pagamentos. Todos os custos da nota voltam para aprovação conjunta. Propostas pendentes da versão anterior são marcadas como substituídas, sem apagar sua auditoria.
 
-O custo dos materiais permanece pendente até a aprovação. Linhas do mesmo material na nota são agrupadas por média ponderada da quantidade de consumo. Auditoria registra decisões de custo e, separadamente, a decisão sobre o valor total da nota. O pagamento das parcelas não altera o custo aprovado. Notas antigas já importadas pela versão anterior mantêm seus registros históricos; o fluxo integral é aplicado às novas importações.
+O XML integral e os itens originais ficam preservados. As edições representam dados de trabalho para conferência, não uma alteração do documento fiscal. Quantidade × preço unitário deve conferir com o total do item; a composição continua obrigada a fechar com os totais originais da nota. Diferenças bloqueiam a importação ou revisão.
 
-## Lançamento manual
+Quando despesas já estiverem distribuídas nos itens e fecharem com os totais, a distribuição original é mantida. Se houver apenas um total global, o rateio usa o valor líquido dos produtos e fecha centavos por maiores frações. Distribuições parciais ou divergentes exigem conferência. ICMS, PIS, COFINS e tributos aproximados não são somados novamente ao preço. IPI, II, ICMS-ST, FCP-ST, IPI devolvido e desoneração são tratados na composição conforme o XML. A conferência não substitui validação fiscal e revisão contábil.
 
-Use a tela **Lançamento manual**. O documento/referência é **opcional**. Informe fornecedor, situação documental, emissão, recebimento, material, conversão, valores, parcelamento e vencimento. Desconto, frete e outras despesas são campos separados. Valores de referência manual vazios são aceitos. Pagamentos parciais e totais ficam em **Contas a pagar**, com histórico por data de pagamento.
+Duplicatas de cobr/dup mantêm datas e valores exatos e devem somar o total da nota. Sem vencimento no XML, informe a data confirmada. Dados de pag/detPag são preservados e não geram quitação bancária automática. A chave impede nota duplicada. Desmarcar item exclui apenas cadastro/atualização de material; financeiro permanece pelo total integral.
 
-## Demais módulos
+## Aprovação e contas a pagar
 
-- **Materiais e fornecedores:** cadastro manual também disponível. Todo custo inicial exige aprovação. Cabeçotes e flanges são conjuntos completos com solda incluída.
-- **Equipe e produção:** cadastre salário, provisões, encargos agregados incluindo FGTS e horas produtivas. Custo/hora = salário × (1 + provisões de 13º e férias) × (1 + encargos) / horas produtivas. A base dos encargos é salário e provisões. Etapas usam minutos por bloco iniciado de 100 mm por elemento, mesma referência entre diâmetros.
-- **Custos e preços:** informe dimensões finais após compactação, elementos e consumos técnicos. Bases: conjunto, por elemento ou por metro de elemento. Nipples sugerem 2 por elemento, ajustáveis. Terminais exigem quantidade informada. Cabeçotes/flanges usam conjunto completo; evite duplicar solda já incluída.
-- **Rateios e preço:** fabricação e administrativo são valores atribuídos em reais por orçamento. Informe somente despesas fora dos materiais, acessórios e mão de obra. Tributos de venda e margem são configurados pela RR. Preço por margem = custo / (1 − tributos − margem); preço por markup = custo × multiplicador. Margem bruta deduz materiais, acessórios, mão de obra e fabricação; margem líquida estimada deduz também administrativo e tributos. Descontos mostram o efeito no resultado. Orçamentos preservam uma cópia dos custos utilizados.
-- **Contas a pagar:** registre quitações totais ou parciais sem exceder o saldo. Parcelas manuais são mensais, ajustadas ao último dia disponível e preservando centavos. Parcelas de XML seguem as datas exatas do documento.
-- **Relatórios:** três últimos meses completos por padrão, início inclusivo e fim exclusivo. Entradas usam recebimento; compromissos usam vencimento; quitações usam data do pagamento. Comparação com período anterior de mesma duração em dias. Excel usa HTML tabular em .xls e pode mostrar aviso de formato; PDF usa Salvar como PDF na impressão.
-- **Configurações:** backups JSON e exemplo demonstrativo em base vazia. Restauração substitui a base após confirmação.
+Aprovação da nota abrange seu valor total e todos os custos vinculados, com responsável e confirmação. Materiais repetidos são agrupados por média ponderada das quantidades de consumo. Aprovar notas não altera orçamentos anteriores. Pagamentos parciais ou totais são registrados separadamente e não alteram custos. Parcelas manuais são mensais, com centavos preservados e ajuste ao último dia disponível do mês; parcelas XML usam as datas do documento.
 
-## Organização
+**Lançamento manual:** referência documental opcional. Informe fornecedor, material, documentação, emissão, recebimento, conversão, valores e vencimentos.
 
-- dist/domain.mjs: cálculos, custos, parcelas e aprovações.
-- dist/nfe.mjs: parser NF-e, conciliação, rateio, cadastro automático e decisão integral.
-- dist/store.mjs: repositório em memória por acesso, substituível por API/banco futuro.
-- dist/app.mjs: interface e coordenação das operações.
-- technical-input.schema.json: contrato futuro de dimensões e elementos; integração não executada.
-- tests/domain.test.mjs, tests/nfe.test.mjs, tests/ui.test.mjs, tests/session.test.mjs: testes automatizados com fixture fictícia.
+## Custos de produção e preços
 
-## Validação e limites
+Cadastre salário, provisões de 13º e férias, encargos agregados incluindo FGTS e horas produtivas. Custo/hora = salário × (1 + provisões) × (1 + encargos) / horas produtivas. Etapas usam minutos por bloco iniciado de 100 mm por elemento, mesma referência entre diâmetros. Valide essa interpretação com os tempos reais da RR.
 
-33 testes automatizados passaram: domínio, XML com parser real, aprovação integral, duplicidade, centavos, parcelas, separação dos formulários, base temporária e renderização com DOM simulado. Também foi verificada no navegador a importação completa de XML demonstrativo em base vazia, sem lançamento manual, e a limpeza após recarregamento.
+Informe dimensões finais após compactação e consumos técnicos sem geometria presumida. Bases de consumo: conjunto, por elemento ou por metro de elemento. Cabeçotes e flanges são conjuntos completos com solda incluída. Terminais têm quantidade informada; nipples sugerem duas unidades por elemento, ajustáveis.
 
-Primeira versão de testes, sem autenticação de operadores, validação fiscal, banco compartilhado ou conciliação bancária. Auditoria local não é imutável. Backups têm validação estrutural básica: use arquivos confiáveis. Importações com novos grupos fiscais ou regras de composição não suportadas são bloqueadas quando não fecham com os totais, para evitar custo estimado incorreto. Não há integração com SEFAZ. Ainda pendentes: edição de cadastros/parcelas, rateios mensais automáticos, XLSX/PDF nativos e comparações por meses de calendário.
+Indiretos de fabricação e administrativo são valores atribuídos em reais, evitando incluir custos já presentes nas outras rubricas. Tributos de venda e margem são configurados pela RR. Preço por margem = custo / (1 − tributos − margem); preço por markup = custo × multiplicador. Margem bruta deduz materiais, acessórios, mão de obra e fabricação; a líquida estimada deduz também administrativo e tributos. Desconto mostra impacto no resultado.
+
+## Relatórios e backups
+
+Três últimos meses completos por padrão. Entrada usa recebimento; compromissos usam vencimentos; quitações usam a data do pagamento. Início inclusivo e fim exclusivo; comparação com período anterior de igual duração em dias. Excel usa HTML tabular em .xls; PDF usa impressão do navegador.
+
+**Exportar backup** gera JSON. Em **Configurações**, restaurar backup substitui a base após confirmação. Demonstração é carregada somente em base vazia. Backup contém os dados locais; ele não é enviado ao GitHub.
+
+## Organização e validação
+
+- dist/domain.mjs: custos, preços, aprovações e parcelas.
+- dist/nfe.mjs: NF-e, conciliação, rateio e cadastro automático.
+- dist/editing.mjs: edição de materiais, fornecedores e itens, revisão e auditoria.
+- dist/keyboard.mjs: Enter para avançar entre campos.
+- dist/store.mjs: repositório local persistente, substituível por API/banco futuro.
+- dist/app.mjs: interface, rascunhos e coordenação.
+- technical-input.schema.json: contrato de integração técnica futura, ainda não conectada.
+
+42 testes automatizados cobrem domínio, XML, conciliação, pagamentos, edição, aprovação, teclado, persistência e telas. Verificado no navegador: Enter muda foco sem enviar; rascunhos sobrevivem à navegação; material editado permanece após recarregar; nota editada mantém total e originais; menu usa rolagem própria.
+
+## Limites
+
+Sistema inicial de testes, sem autenticação de operadores, banco compartilhado, conciliação bancária ou validação SEFAZ. Auditoria local não é imutável. Backups têm validação estrutural básica; use arquivos confiáveis. Fórmulas fiscais não suportadas são bloqueadas se a composição não fechar. Ainda pendentes: edição individual de vencimentos, rateios mensais automáticos, XLSX/PDF nativos e comparação por meses de calendário.
